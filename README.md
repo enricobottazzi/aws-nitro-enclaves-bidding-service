@@ -133,21 +133,38 @@ We will be creating AWS Resources for each of the roles and then creating our en
 
 #### Buyer1
 1. Create a S3 bucket. See these [instructions](https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html "instructions") Note the name and ARN.
-2. Create a KMS Customer managed key (CMK). See these [instructions](https://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html#create-symmetric-cmk "instructions") for more details. Note the KeyID and ARN of this key.
-3. In this POC we will be making three bids on three different properties. Determine your bids for each property and then encrypt the bids using aws-cli. See [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html "instructions") for more details about aws-cli. For the example I will be bidding $100,000 on the first property, $200,000 on the second property, and $150,000 on the third property.
+2. Create a KMS Customer managed key (CMK). See these [instructions](https://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html#create-symmetric-cmk "instructions") for more details. Note the KeyID and ARN of this key. 
+3. In this POC we will be making three bids on three different properties. Determine your bids for each property and then encrypt the bids using aws-cli. See [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html "instructions") for more details about aws-cli. For the example I will be bidding $100,000 on the first property, $200,000 on the second property, and $150,000 on the third property. In order to allow your user to use the KMS key for encryption, you need to update the user IAM policy.
+
+buyer-1 arn:aws:s3:::buyer-1
+
+17d19904-fb45-4ae8-8995-4d042db72d60
+arn:aws:kms:eu-central-1:509851287582:key/17d19904-fb45-4ae8-8995-4d042db72d60
 
 ```
-aws kms encrypt --key-id <KMS CMK KeyID> --cli-binary-format raw-in-base64-out --plaintext "100000"
+aws kms encrypt --key-id <KMS CMK KeyID> --cli-binary-format raw-in-base64-out --plaintext "100000" --output json
 Returns: <Encrypted Bid 1>
-aws kms encrypt --key-id <KMS CMK KeyID> --cli-binary-format raw-in-base64-out --plaintext "200000"
+aws kms encrypt --key-id <KMS CMK KeyID> --cli-binary-format raw-in-base64-out --plaintext "200000" --output json
 Returns: <Encrypted Bid 2>
-aws kms encrypt --key-id <KMS CMK KeyID> --cli-binary-format raw-in-base64-out --plaintext "150000"
+aws kms encrypt --key-id <KMS CMK KeyID> --cli-binary-format raw-in-base64-out --plaintext "150000" --output json
 Returns: <Encrypted Bid 3>
 ```
 > If you need to verify the bid is encrypted correctly, you can use the following command to decrypt it: 
     ```
-    aws kms decrypt --key-id <KMS CMK KeyID> --ciphertext-blob "<Encrypted Bid>" | jq -r .Plaintext | base64 --decode
+    aws kms decrypt --key-id <KMS CMK KeyID> --ciphertext-blob "<Encrypted Bid>" --output json | jq -r .Plaintext | base64 --decode
     ```
+
+encrypted bid 1 (100000):
+
+AQICAHj8iOWFsZ2U/m73PN8eYUWZ7Zwm2WJtylt+Th/ZsBuKqQHSlCHhQJHWwLOulQR7cfKPAAAAZDBiBgkqhkiG9w0BBwagVTBTAgEAME4GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMpx/9/3zBinpPrhheAgEQgCElgrqr/poJKojAqi1uDNaTE1pmkavm6ohdFQJyxlpGzJ0=
+
+encrypted bid 2 (200000):
+
+AQICAHj8iOWFsZ2U/m73PN8eYUWZ7Zwm2WJtylt+Th/ZsBuKqQHd4USPTr4Oj8f/eyFJx0KcAAAAZDBiBgkqhkiG9w0BBwagVTBTAgEAME4GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMCtAqye+yK5a+UMhtAgEQgCEUbxhBYeDgMZ6AUhaZK8UajGaUf5EgZnxJemJJ4sWHCTU=
+
+encrypted bid 3 (150000):
+
+AQICAHj8iOWFsZ2U/m73PN8eYUWZ7Zwm2WJtylt+Th/ZsBuKqQGXBpIN3HyNdtmBC4yaWGzPAAAAZDBiBgkqhkiG9w0BBwagVTBTAgEAME4GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMQuXEdYnWT7xk2axyAgEQgCEy53mr5QF94HQGe6/xy/cakfsmO2Lo5KH7sSw2BhCc9Ko=
 
 4. Now create a file called encrypted.csv:
 ```
@@ -162,11 +179,33 @@ Returns: <Encrypted Bid 3>
 #### Buyer2
 Buyer2 should repeat the steps above to create their AWS resources and generate their own file. Ensure the bid amounts are different.
 
+buyer-2 arn:aws:s3:::buyer-2
+
+4c488a6d-adb4-4df5-8419-5ebb7bef0b08
+arn:aws:kms:eu-central-1:509851287582:key/4c488a6d-adb4-4df5-8419-5ebb7bef0b08
+
+encrypted bid 1 (300000):
+
+AQICAHin9BgC9bA2avO3rEtYqyZlaQ1P5aXel/TyTPb38GCgRQHEwQxusL/L7+nU541nIqjFAAAAZDBiBgkqhkiG9w0BBwagVTBTAgEAME4GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMhyFCPSFcJSqUtv1pAgEQgCH07sDP/qRQ+TpbX5Rqugf8sn1RpZfeqVzt3eQJz5qs9uY=
+
+encrypted bid 2 (50000):
+
+AQICAHin9BgC9bA2avO3rEtYqyZlaQ1P5aXel/TyTPb38GCgRQGS4Kbgo4vnt2/ZtYypEVzjAAAAYzBhBgkqhkiG9w0BBwagVDBSAgEAME0GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMqMrHML0VobPFYW0AAgEQgCDxGG/q5snFtIITexdr2ZH9AXQxt47j5AMM/MDFVr1Jwg==
+
+encrypted bid 3 (350000):
+
+AQICAHin9BgC9bA2avO3rEtYqyZlaQ1P5aXel/TyTPb38GCgRQEj0KaNaqQwv3uFEBsJk5MpAAAAZDBiBgkqhkiG9w0BBwagVTBTAgEAME4GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM9g7wN4saIfBQ9t03AgEQgCEjoYeguXuBnn8/56tEA4cwGqmeNgZaIIHBsdxzcYD9cLY=
+
 #### Bidding Service
 1. Create a S3 bucket. See these [instructions](https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html "instructions") 
 2. Note the name and ARN.
 3. Follow these [instructions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#working-with-iam-roles "instructions") to create an IAM EC2 instance role.
 4. Note the ARN for the IAM role.
+
+bidding-service-mpc
+arn:aws:s3:::bidding-service-mpc
+
+arn:aws:iam::509851287582:role/bidding-service
 
 ### IAM Setup
 At this point you should have the following ARNs from the previous steps:
@@ -176,6 +215,13 @@ At this point you should have the following ARNs from the previous steps:
 - INSTANCE ROLE ARN: IAM role arn assigned to EC2 instance.
 - Buyer1 KMS CMK ARN: KMS CMK arn for Buyer1.
 - Buyer2 KMS CMK ARN: KMS CMK arn for Buyer2.
+
+arn:aws:s3:::buyer-1
+arn:aws:s3:::buyer-2
+arn:aws:s3:::bidding-service-mpc
+arn:aws:iam::509851287582:role/bidding-service
+arn:aws:kms:eu-central-1:509851287582:key/17d19904-fb45-4ae8-8995-4d042db72d60
+arn:aws:kms:eu-central-1:509851287582:key/4c488a6d-adb4-4df5-8419-5ebb7bef0b08
 
 #### Buyer1 and Buyer2
 1. Follow these [instructions](https://docs.aws.amazon.com/AmazonS3/latest/userguide/add-bucket-policy.html "instructions") to add the following bucket policy to the Buyer's S3 bucket:
@@ -242,20 +288,13 @@ At this point you should have the following ARNs from the previous steps:
 ### EC2 Instance Setup
 #### Bidding Service
 1. Launch an EC2 instance with the following settings:
-    * AMI: Amazon Linux 2 AMI (HVM), SSD Volume Type, x86
+    * AMI: Amazon Linux 2023 kernel 6.1 AMI (HVM), SSD Volume Type, x86
     * Instance type: c5.2xlarge
     * IAM role: Choose the instance role created earlier
     * Enclave: Enable
 2. Login to the EC2 instance.
-3. Setup Docker and nitro-cli
-```
-sudo amazon-linux-extras install -y docker
-sudo systemctl start docker
-sudo systemctl enable docker
-sudo usermod -a -G docker ec2-user
-sudo amazon-linux-extras enable aws-nitro-enclaves-cli
-sudo yum install -y aws-nitro-enclaves-cli aws-nitro-enclaves-cli-devel
-```
+3. Setup Docker and nitro-cli following this guide: https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave-cli-install.html (steps 1 to 5)
+
 4. Allocate more memory to Nitro Enclaves by modifying /etc/nitro_enclaves/allocator.yaml:
 ```
 memory_mib: 4096
@@ -270,7 +309,7 @@ sudo yum install -y python3 python3-pip
 ```
 7. Install Python dependencies
 ```
-sudo pip3 install boto3 pandas
+sudo pip3 install boto3 pandas python-dateutil==2.9.0
 ```
 8. Start the vsock-proxy to allow KMS communication from the Enclave
 ```
@@ -284,6 +323,10 @@ sudo systemctl enable nitro-enclaves-vsock-proxy.service
 ```
 sudo yum install -y git
 git clone https://github.com/aws-samples/aws-nitro-enclaves-bidding-service.git
+```
+1.5 Start the docker server
+```
+sudo systemctl start docker
 ```
 2. Build the kmstool-enclave-cli by following the instructions here: [https://github.com/aws/aws-nitro-enclaves-sdk-c/tree/main/bin/kmstool-enclave-cli](https://github.com/aws/aws-nitro-enclaves-sdk-c/tree/main/bin/kmstool-enclave-cli "instructions")
 3. After building the kmstool-enclave-cli, copy kmstool_enclave_cli and libnsm.so to your nitro-enclave-bidding-service directory.
@@ -319,7 +362,17 @@ Enclave Image successfully created.
   } 
 }
 ```
+
 7. Save the PCR values for setting up the KMS key policies later in this document.
+
+{
+  "Measurements": {
+    "HashAlgorithm": "Sha384 { ... }",
+    "PCR0": "6b2412258dad895c6712f852994725d9c27171258d90a4d4a50c32a4e6862ab9dbe0ca2d98449cba5e323823cc782e9c",
+    "PCR1": "4b4d5b3661b3efc12920900c80e126e4ce783c522de6c02a2a5bf7af3a2b9327b86776f188e4be1c1c404a129dbda493",
+    "PCR2": "2cc6d5090f3ce06a48a5ff2a9a7248a1abb9f97c6b331b20f2dad97455560f4d17b5afbee9ab514794ec527623a03aff"
+  }
+}
 
 ### KMS Key Policies Setup
 #### Buyer1 and Buyer2
@@ -365,6 +418,23 @@ Started enclave with enclave-cid: 19, memory: 4096 MiB, cpu-ids: [1, 5]
 }
 ```
 Note the EnclaveID and EnclaveCID.
+
+->
+
+```
+{
+  "EnclaveName": "vsock_poc",
+  "EnclaveID": "i-0d75d3fba6c6bce52-enc19bb302bafb8f96",
+  "ProcessID": 42993,
+  "EnclaveCID": 16,
+  "NumberOfCPUs": 2,
+  "CPUIDs": [
+    1,
+    5
+  ],
+  "MemoryMiB": 4096
+}
+```
 
 2. Connect to the enclave console using the EnclaveID:
 ```
